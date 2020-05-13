@@ -55,13 +55,13 @@
         /// </summary>
         public static readonly YaapColorScheme Bright = new YaapColorScheme
         {
-            ProgressBarColor = TerminalColor.FromConsoleColor(ANSIColor.BrightGreen),
-            ProgressBarPausedColor = TerminalColor.FromConsoleColor(ANSIColor.BrightYellow),
-            ProgressBarStalledColor = TerminalColor.FromConsoleColor(ANSIColor.Red),
-            ProgressPercentColor = TerminalColor.FromConsoleColor(ANSIColor.BrightYellow),
-            ProgressCountColor = TerminalColor.FromConsoleColor(ANSIColor.BrightMagenta),
-            RateColor = TerminalColor.FromConsoleColor(ANSIColor.BrightCyan),
-            TimeColor = TerminalColor.FromConsoleColor(ANSIColor.BrightGreen),
+            ProgressBarColor = TerminalColor.FromConsoleColor(AnsiColor.BrightGreen),
+            ProgressBarPausedColor = TerminalColor.FromConsoleColor(AnsiColor.BrightYellow),
+            ProgressBarStalledColor = TerminalColor.FromConsoleColor(AnsiColor.Red),
+            ProgressPercentColor = TerminalColor.FromConsoleColor(AnsiColor.BrightYellow),
+            ProgressCountColor = TerminalColor.FromConsoleColor(AnsiColor.BrightMagenta),
+            RateColor = TerminalColor.FromConsoleColor(AnsiColor.BrightCyan),
+            TimeColor = TerminalColor.FromConsoleColor(AnsiColor.BrightGreen),
         };
 
         /// <summary>
@@ -69,13 +69,13 @@
         /// </summary>
         public static readonly YaapColorScheme Dark = new YaapColorScheme
         {
-            ProgressBarColor = TerminalColor.FromConsoleColor(ANSIColor.Green),
-            ProgressBarPausedColor = TerminalColor.FromConsoleColor(ANSIColor.Yellow),
-            ProgressBarStalledColor = TerminalColor.FromConsoleColor(ANSIColor.Red),
-            ProgressPercentColor = TerminalColor.FromConsoleColor(ANSIColor.Yellow),
-            ProgressCountColor = TerminalColor.FromConsoleColor(ANSIColor.Magenta),
-            RateColor = TerminalColor.FromConsoleColor(ANSIColor.Cyan),
-            TimeColor = TerminalColor.FromConsoleColor(ANSIColor.Green),
+            ProgressBarColor = TerminalColor.FromConsoleColor(AnsiColor.Green),
+            ProgressBarPausedColor = TerminalColor.FromConsoleColor(AnsiColor.Yellow),
+            ProgressBarStalledColor = TerminalColor.FromConsoleColor(AnsiColor.Red),
+            ProgressPercentColor = TerminalColor.FromConsoleColor(AnsiColor.Yellow),
+            ProgressCountColor = TerminalColor.FromConsoleColor(AnsiColor.Magenta),
+            RateColor = TerminalColor.FromConsoleColor(AnsiColor.Cyan),
+            TimeColor = TerminalColor.FromConsoleColor(AnsiColor.Green),
         };
     }
 }

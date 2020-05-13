@@ -10,7 +10,7 @@ namespace Yaap
     /// https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
     /// </summary>
     [PublicAPI]
-    public enum ANSIColor
+    public enum AnsiColor
     {
         /// <summary>
         /// Roughly 0,0,0
@@ -119,17 +119,17 @@ namespace Yaap
         /// <param name="bg">The <see cref="TerminalColor"/> to use as a background color</param>
         /// <returns>The newly created <see cref="TerminalColor"/></returns>
         [PublicAPI]
-        public static TerminalColor FromConsoleColor(ANSIColor fg, ANSIColor bg = ANSIColor.Default)
+        public static TerminalColor FromConsoleColor(AnsiColor fg, AnsiColor bg = AnsiColor.Default)
             => new TerminalColor(fg, bg);
 
-        private TerminalColor(ANSIColor fg, ANSIColor bg = ANSIColor.Default)
+        private TerminalColor(AnsiColor fg, AnsiColor bg = AnsiColor.Default)
             => EscapeCode = GetVt100Representation(fg, bg);
 
-        private static string GetVt100Representation(ANSIColor fg, ANSIColor bg = ANSIColor.Default)
+        private static string GetVt100Representation(AnsiColor fg, AnsiColor bg = AnsiColor.Default)
         {
             return $"{CSI}{GetFGColor(fg)};{GetBGColor(bg)}m";
-            string GetFGColor(ANSIColor color) => ((int)color).ToString();
-            string GetBGColor(ANSIColor color) => ((int)color + 10).ToString();
+            string GetFGColor(AnsiColor color) => ((int)color).ToString();
+            string GetBGColor(AnsiColor color) => ((int)color + 10).ToString();
         }
 
         /// <summary>
