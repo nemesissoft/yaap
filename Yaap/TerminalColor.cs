@@ -89,9 +89,7 @@ namespace Yaap
     public class TerminalColor
     {
         private static readonly bool _isTrueColorSupported = Environment.GetEnvironmentVariable("COLORTERM") == "truecolor";
-        private const string CSI = "\u001B[";
-        private const string FgReset = CSI + "0m";
-
+        
         /// <summary>
         /// The vt100 escape code that should generate this <see cref="TerminalColor"/> on screen
         /// </summary>
@@ -108,7 +106,7 @@ namespace Yaap
         /// A <see cref="TerminalColor"/> representing a reset of the terminal coloring back to the default color
         /// </summary>
         [PublicAPI]
-        public static TerminalColor Reset { get; } = new TerminalColor(FgReset);
+        public static TerminalColor Reset { get; } = new TerminalColor(AnsiCodes.FG_RESET);
 
         private TerminalColor(string color) => EscapeCode = color;
 
@@ -127,9 +125,9 @@ namespace Yaap
 
         private static string GetVt100Representation(AnsiColor fg, AnsiColor bg = AnsiColor.Default)
         {
-            return $"{CSI}{GetFGColor(fg)};{GetBGColor(bg)}m";
-            string GetFGColor(AnsiColor color) => ((int)color).ToString();
-            string GetBGColor(AnsiColor color) => ((int)color + 10).ToString();
+            return $"{AnsiCodes.CSI}{GetForeColor(fg)};{GetBackColor(bg)}m";
+            static string GetForeColor(AnsiColor color) => ((int)color).ToString();
+            static string GetBackColor(AnsiColor color) => ((int)color + 10).ToString();
         }
 
         /// <summary>
@@ -147,10 +145,10 @@ namespace Yaap
         {
             if (!_isTrueColorSupported)
                 throw new Exception("terminal truecolor support doesn't seem to be supported by this terminal, if you are sure this is wrong, you can set the $TERMCOLOR environment variable to 'trueolor'");
-            var (r, b, g, _) = color;
+            (int r, int b, int g, _) = color;
             return bg ?
-                $"{CSI}48;2;{r};{g};{b}m" :
-                $"{CSI}38;2;{r};{g};{b}m";
+                $"{AnsiCodes.CSI}48;2;{r};{g};{b}m" :
+                $"{AnsiCodes.CSI}38;2;{r};{g};{b}m";
         }
     }
 }

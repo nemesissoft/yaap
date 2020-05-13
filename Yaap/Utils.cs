@@ -29,7 +29,8 @@ namespace Yaap
         public const string ERASE_TO_LINE_START = CSI + "1K";
         public const string SAVE_CURSOR_POSITION = ESC + "7";
         public const string RESTORE_CURSOR_POSITION = ESC + "8";
-        
+        public const string FG_RESET = CSI + "0m";
+
         internal static void SetScrollableRegion(int top, int bottom) =>
             Console.Write($"{CSI}{top};{bottom}r");
     }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -55,20 +56,13 @@ namespace Yaap
             };
         }
 
-        private static bool DetectConsoleRedirection()
-        {
-            switch (Environment.OSVersion.Platform)
-            {
-                case PlatformID.Win32NT:
-                    return Win32Console.DetectConsoleRedirectionOnWindows();
-
-                case PlatformID.MacOSX:
-                case PlatformID.Unix:
-                    return DetectConsoleRedirectionOnPosix();
-                default:
-                    return false;
-            }
-        }
+        private static bool DetectConsoleRedirection() =>
+            Environment.OSVersion.Platform switch {
+                PlatformID.Win32NT => Win32Console.DetectConsoleRedirectionOnWindows(),
+                PlatformID.MacOSX => DetectConsoleRedirectionOnPosix(),
+                PlatformID.Unix => DetectConsoleRedirectionOnPosix(),
+                _ => false
+            };
 
         private static bool DetectConsoleRedirectionOnPosix() =>
             !Mono.Unix.Native.Syscall.isatty(1);
@@ -154,17 +148,12 @@ namespace Yaap
 
         private static int GetOrSetVerticalPosition(Yaap yaap)
         {
-            switch (yaap.Settings.Positioning)
-            {
-                case YaapPositioning.FlowAndSnapToTop:
-                    return FlowAndSnapToTop();
-                case YaapPositioning.ClearAndAlignToTop:
-                    return ClearAndAlignToTop();
-                case YaapPositioning.FixToBottom:
-                    return FixToBottom();
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            return yaap.Settings.Positioning switch {
+                YaapPositioning.FlowAndSnapToTop => FlowAndSnapToTop(),
+                YaapPositioning.ClearAndAlignToTop => ClearAndAlignToTop(),
+                YaapPositioning.FixToBottom => FixToBottom(),
+                _ => throw new ArgumentOutOfRangeException()
+            };
 
             int FlowAndSnapToTop()
             {
@@ -172,7 +161,7 @@ namespace Yaap
                     yaap.Position = yaap.Settings.VerticalPosition.Value;
                 else
                 {
-                    var lastPos = -1;
+                    int lastPos = -1;
                     foreach (var p in _instances.Keys)
                     {
                         if (p > lastPos + 1)
@@ -461,7 +450,10 @@ namespace Yaap
         private readonly string _progressCountFmt;
         private readonly int _maxGlyphWidth;
         private readonly double _repaintProgressIncrement;
-        internal readonly Stopwatch _sw;
+        /// <summary>
+        /// Measures time of operation
+        /// </summary>
+        protected readonly Stopwatch Sw;
         private TimeSpan _totalTime;
         private static readonly long _swTicksIn1Hour = Stopwatch.Frequency * 3600;
         private long _lastRepaintTicks;
@@ -474,16 +466,17 @@ namespace Yaap
 
         static Yaap()
         {
-            void DoUnspeakableThingsOnWindows()
+            static void DoUnspeakableThingsOnWindows()
             {
                 // ReSharper disable once HeapView.ObjectAllocation.Evident
+                // ReSharper disable StringLiteralTypo
                 var acceptableUnicodeFonts = new[] {
                     "Hack",
                     "InputMono",
                     "Hasklig",
                     "DejaVu Sans Mono",
                     "Iosevka",
-                };
+                }; // ReSharper restore StringLiteralTypo
 
                 var vt100IsGo = Win32Console.EnableVt100Stuffs();
                 _unicodeNotWorking = vt100IsGo &&
@@ -578,7 +571,7 @@ namespace Yaap
 
             _rate = double.NaN;
             _totalTime = TimeSpan.MaxValue;
-            _sw = Stopwatch.StartNew();
+            Sw = Stopwatch.StartNew();
 
             Parent = YaapRegistry.YaapStack.Value.Count == 0
                 ? null : YaapRegistry.YaapStack.Value.Peek();
@@ -689,10 +682,7 @@ namespace Yaap
             for (var i = 0; i < _metricUnits.Length; i++)
             {
                 if (num < 1000)
-                {
                     return (num, _metricUnits[i]);
-                }
-
                 num /= 1000;
             }
             throw new ArgumentOutOfRangeException(nameof(num), "is too large");
@@ -730,7 +720,7 @@ namespace Yaap
             get
             {
                 var updateSpan = Stopwatch.Frequency;
-                var swElapsedTicks = _sw.ElapsedTicks;
+                var swElapsedTicks = Sw.ElapsedTicks;
 
                 if (swElapsedTicks >= _swTicksIn1Hour || _totalTime.Ticks >= TimeSpan.TicksPerHour)
                     updateSpan = Stopwatch.Frequency * 60;
@@ -784,7 +774,7 @@ namespace Yaap
             // Capture progress while repainting
             var progress = Progress;
             var nestedProgress = NestedProgress;
-            var elapsedTicks = _sw.ElapsedTicks;
+            var elapsedTicks = Sw.ElapsedTicks;
 
             (_rate, _totalTime) = RecalculateRateAndTotalTime();
 
@@ -899,21 +889,17 @@ namespace Yaap
                     buffer.Append(' ', numSpaces);
                 buffer.Append('|');
 
-                TerminalColor SelectProgressBarColor()
-                {
-                    switch (State)
-                    {
-                        case YaapState.Running: return Settings.ColorScheme.ProgressBarColor;
-                        case YaapState.Paused: return Settings.ColorScheme.ProgressBarPausedColor;
-                        case YaapState.Stalled: return Settings.ColorScheme.ProgressBarStalledColor;
-
-                    }
-                    throw new ArgumentOutOfRangeException();
-                }
+                TerminalColor SelectProgressBarColor() =>
+                    State switch {
+                        YaapState.Running => Settings.ColorScheme.ProgressBarColor,
+                        YaapState.Paused => Settings.ColorScheme.ProgressBarPausedColor,
+                        YaapState.Stalled => Settings.ColorScheme.ProgressBarStalledColor,
+                        _ => throw new ArgumentOutOfRangeException()
+                    };
 
                 int RenderSimpleProgressGlyphs()
                 {
-                    var numGlyphChars = (int)((progress * _maxGlyphWidth) / Total);
+                    var numGlyphChars = (int)(progress * _maxGlyphWidth / Total);
                     buffer.Append(_selectedBarStyle[0], numGlyphChars);
                     return numGlyphChars;
                 }
@@ -1052,11 +1038,10 @@ namespace Yaap
         private readonly IEnumerable<T> _enumerable;
         private static Func<IEnumerable<T>, int> _cheapCount;
 
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         internal YaapEnumerable(IEnumerable<T> e, long total = -1, long initialProgress = 0, YaapSettings settings = null) :
-            base(total != -1 ? total : GetCheapCount(e), initialProgress, settings)
-        {
+            base(total != -1 ? total : GetCheapCount(e), initialProgress, settings) =>
             _enumerable = e;
-        }
 
         /// <summary>
         /// Attempt to get a "cheap" count value for the <see cref="IEnumerable{T}"/>, where "cheap" means that the enumerable is
@@ -1064,43 +1049,40 @@ namespace Yaap
         /// </summary>
         /// <param name="source">The <see cref="IEnumerable{T}"/> object</param>
         /// <returns>The count value, or -1 in case the cheap count failed</returns>
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public static int GetCheapCount(IEnumerable<T> source)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
-            switch (source)
-            {
-                case ICollection<T> collectionoft:
-                    return collectionoft.Count;
-                case ICollection collection:
-                    return collection.Count;
-            }
-
-            return CheapCountDelegate(source);
-
+            return source switch {
+                ICollection<T> collectionOfT => collectionOfT.Count,
+                ICollection collection => collection.Count,
+                _ => CheapCountDelegate(source)
+            };
         }
 
         #region Avert Your Eyes!
 
+        [SuppressMessage("ReSharper", "IdentifierTypo")]
         private static Func<IEnumerable<T>, int> CheapCountDelegate
         {
             get
             {
-                return _cheapCount ?? (_cheapCount = GenerateGetCount());
+                return _cheapCount ??= GenerateGetCount();
 
-                Func<IEnumerable<T>, int> GenerateGetCount()
+                static Func<IEnumerable<T>, int> GenerateGetCount()
                 {
                     var iilp = typeof(Enumerable).Assembly.GetType("System.Linq.IIListProvider`1");
                     Debug.Assert(iilp != null);
                     var iilpt = iilp.MakeGenericType(typeof(T));
                     Debug.Assert(iilpt != null);
-                    var getCountMI = iilpt.GetMethod("GetCount", BindingFlags.Public | BindingFlags.Instance, null,
+                    var getCountMi = iilpt.GetMethod("GetCount", BindingFlags.Public | BindingFlags.Instance, null,
                         new[] { typeof(bool) }, null);
-                    Debug.Assert(getCountMI != null);
+                    Debug.Assert(getCountMi != null);
                     var param = Expression.Parameter(typeof(IEnumerable<T>));
 
-                    var castAndCall = Expression.Call(Expression.Convert(param, iilpt), getCountMI,
+                    var castAndCall = Expression.Call(Expression.Convert(param, iilpt), getCountMi,
                         Expression.Constant(true));
 
                     var body = Expression.Condition(Expression.TypeIs(param, iilpt), castAndCall,
@@ -1120,7 +1102,7 @@ namespace Yaap
         {
             // In the case of enumerable we can actually start ticking the elapsed clock
             // at a later, more precise, time, so lets do it...
-            _sw.Restart();
+            Sw.Restart();
             foreach (var t in _enumerable)
             {
                 yield return t;
@@ -1152,7 +1134,7 @@ namespace Yaap
 
     internal static class DateTimeDeconstruction
     {
-        private const long TICKS_PER_MICRO_SECONDS = 10;
+        //private const long TICKS_PER_MICRO_SECONDS = 10;
         private const long TICKS_PER_MILLISECOND = 10_000;
         private const long TICKS_PER_SECOND = TICKS_PER_MILLISECOND * 1_000;
         private const long TICKS_PER_MINUTE = TICKS_PER_SECOND * 60;
@@ -1166,8 +1148,8 @@ namespace Yaap
                 days = hours = minutes = seconds = ticks = 0;
                 return;
             }
-            var t = timeSpan.Ticks;
-            days = (int)(t / (TICKS_PER_HOUR * 24));
+            long t = timeSpan.Ticks;
+            days = (int)(t / TICKS_PER_DAY);
             hours = (int)((t / TICKS_PER_HOUR) % 24);
             minutes = (int)((t / TICKS_PER_MINUTE) % 60);
             seconds = (int)((t / TICKS_PER_SECOND) % 60);

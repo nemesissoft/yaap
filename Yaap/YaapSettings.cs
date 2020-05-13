@@ -7,7 +7,7 @@ namespace Yaap
     /// The current state of the <see cref="Yaap"/> instance
     /// </summary>
     [PublicAPI]
-    public enum YaapState
+    public enum YaapState : byte
     {
         /// <summary>
         /// The yaap instance is running (progressing)
@@ -28,7 +28,7 @@ namespace Yaap
     /// </summary>
     [PublicAPI]
     [Flags]
-    public enum YaapElement
+    public enum YaapElement : byte
     {
         /// <summary>
         /// The description prefix visual Yaap element
@@ -63,7 +63,7 @@ namespace Yaap
     /// <summary>
     /// An enumeration representing the different positioning/alignment options for a Yaap progress bar(s)
     /// </summary>
-    public enum YaapPositioning
+    public enum YaapPositioning : byte
     {
         /// <summary>
         /// Start displaying the Yaap at the current screen position, but snap it to the
