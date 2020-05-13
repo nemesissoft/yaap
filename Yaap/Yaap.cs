@@ -515,7 +515,7 @@ namespace Yaap
 
             _selectedBarStyle = Settings.UseASCII || _unicodeNotWorking
                 ? _asciiBarStyle
-                : YaapBarStyleCache.Glyphs[(int)Settings.Style];
+                : YaapBarStyleCache.GetBar(Settings.Style);
 
             int epilogueLen;
             if (Settings.MetricAbbreviations)
