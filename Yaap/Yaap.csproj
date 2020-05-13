@@ -9,7 +9,7 @@
     <RepositoryUrl>git@github.com:damageboy/yaap.git</RepositoryUrl>
     <PackageProjectUrl>https://github.com/damageboy/yaap</PackageProjectUrl>
     <PackageLicense>https://raw.githubusercontent.com/damageboy/yaap/master/LICENSE</PackageLicense>
-    <Copyright>Copyright 2018 © Dan Shechter</Copyright>
+    <Copyright>Copyright 2018 © Dan Shechter, tweaks by Michał Bryłka</Copyright>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -18,7 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2020.*" />
     <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
     <PackageReference Include="StringFormatter" Version="1.0.0.13" />
     <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />

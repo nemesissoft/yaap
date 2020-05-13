@@ -60,13 +60,13 @@ namespace Yaap
         internal class CONSOLE_FONT_INFOEX
         {
             readonly int cbSize = Marshal.SizeOf(typeof(CONSOLE_FONT_INFOEX));
-            internal  int FontIndex;
-            internal  short FontWidth;
-            internal  short FontHeight;
-            internal  int FontFamily;
-            internal  int FontWeight;
+            internal int FontIndex;
+            internal short FontWidth;
+            internal short FontHeight;
+            internal int FontFamily;
+            internal int FontWeight;
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-            internal  string FaceName;
+            internal string FaceName;
         }
 
 
@@ -132,7 +132,8 @@ namespace Yaap
 
         internal static string ConsoleFontName
         {
-            get {
+            get
+            {
                 if (_consoleFontName != null)
                     return _consoleFontName;
                 // Set output mode to handle virtual terminal sequences

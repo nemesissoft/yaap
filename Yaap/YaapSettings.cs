@@ -58,7 +58,7 @@ namespace Yaap
         /// <summary>
         /// A special or'd value representing all elements of Yaap
         /// </summary>
-        All = Description|ProgressPercent|ProgressBar|ProgressCount|Time|Rate,
+        All = Description | ProgressPercent | ProgressBar | ProgressCount | Time | Rate,
     }
 
     /// <summary>

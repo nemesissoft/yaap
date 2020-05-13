@@ -18,7 +18,7 @@ namespace Yaap
     {
         public const string ESC = "\u001B";
         public const string ResetTerminal = ESC + "c";
-        public const string CSI = ESC +"[";
+        public const string CSI = ESC + "[";
         public const string ClearScreen = CSI + "2J";
         public const string EraseToLineEnd = CSI + "K";
         public const string EraseEntireLine = CSI + "2K";

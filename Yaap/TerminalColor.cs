@@ -4,7 +4,6 @@ using JetBrains.Annotations;
 
 namespace Yaap
 {
-
     /// <summary>
     /// An enum representing the one true set of 3/4 bit ANSI colors
     /// Feel free to read more about ansi color codes:
@@ -127,8 +126,8 @@ namespace Yaap
         static string GetVT100Representation(ANSIColor fg, ANSIColor bg = ANSIColor.Default)
         {
             return $"{CSI}{GetFGColor(fg)};{GetBGColor(bg)}m";
-            string GetFGColor(ANSIColor color) => ((int) color).ToString();
-            string GetBGColor(ANSIColor color) => ((int) color + 10).ToString();
+            string GetFGColor(ANSIColor color) => ((int)color).ToString();
+            string GetBGColor(ANSIColor color) => ((int)color + 10).ToString();
         }
 
         /// <summary>

@@ -37,24 +37,28 @@ namespace Yaap
             if (_isConsoleRedirected)
                 return;
 
-            AppDomain.CurrentDomain.ProcessExit += (sender, args) => {
+            AppDomain.CurrentDomain.ProcessExit += (sender, args) =>
+            {
                 OnCancelKeyPress(null, null);
             };
 
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT) {
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
                 _vt100IsSupported = true;
                 return;
             }
 
             _vt100IsSupported = RedPill();
-            AppDomain.CurrentDomain.ProcessExit += (sender, args) => {
+            AppDomain.CurrentDomain.ProcessExit += (sender, args) =>
+            {
                 BluePill();
             };
         }
 
         static bool DetectConsoleRedirection()
         {
-            switch (Environment.OSVersion.Platform) {
+            switch (Environment.OSVersion.Platform)
+            {
                 case PlatformID.Win32NT:
                     return Win32Console.DetectConsoleRedirectionOnWindows();
 
@@ -83,7 +87,8 @@ namespace Yaap
                 {
                     _instances.Add(GetOrSetVerticalPosition(yaap), yaap);
 
-                    if (IsRunning) {
+                    if (IsRunning)
+                    {
                         // Windows console (in the case we are on windows) has already been red-pilled
                         // So repaint() and bye-bye
                         RepaintYaap(yaap);
@@ -115,10 +120,12 @@ namespace Yaap
                     // Repaint just before removing for cosmetic purposes:
                     // In case we didn't have a recent update to the progress bar, it might be @ 100%
                     // "in reality" but not visually.... This call will close that gap
-                    if (yaap.Settings.Leave) {
+                    if (yaap.Settings.Leave)
+                    {
                         RepaintYaap(yaap);
                     }
-                    else {
+                    else
+                    {
                         ClearYaap(yaap);
                     }
 
@@ -147,7 +154,8 @@ namespace Yaap
 
         static int GetOrSetVerticalPosition(Yaap yaap)
         {
-            switch (yaap.Settings.Positioning) {
+            switch (yaap.Settings.Positioning)
+            {
                 case YaapPositioning.FlowAndSnapToTop:
                     return FlowAndSnapToTop();
                 case YaapPositioning.ClearAndAlignToTop:
@@ -162,9 +170,11 @@ namespace Yaap
             {
                 if (yaap.Settings.VerticalPosition.HasValue)
                     yaap.Position = yaap.Settings.VerticalPosition.Value;
-                else {
+                else
+                {
                     var lastPos = -1;
-                    foreach (var p in _instances.Keys) {
+                    foreach (var p in _instances.Keys)
+                    {
                         if (p > lastPos + 1)
                             return yaap.Position = lastPos + 1;
                         lastPos = p;
@@ -199,13 +209,15 @@ namespace Yaap
 
         static void OnCancelKeyPress(object sender, ConsoleCancelEventArgs e)
         {
-            lock (_consoleLock) {
+            lock (_consoleLock)
+            {
                 Console.Write("\r");
                 Console.Write(ANSICodes.EraseEntireLine);
-                if (_wasCursorHidden) {
+                if (_wasCursorHidden)
+                {
                     Console.CursorVisible = true;
                 }
-                ANSICodes.SetScrollableRegion(0, Console.BufferHeight+1);
+                ANSICodes.SetScrollableRegion(0, Console.BufferHeight + 1);
             }
         }
 
@@ -215,10 +227,13 @@ namespace Yaap
         static void UpdateYaapsOnVt100()
         {
 
-            while (IsRunning) {
+            while (IsRunning)
+            {
                 _buffer.Clear();
-                foreach (var y in _instances.Values) {
-                    if (!y.NeedsRepaint) {
+                foreach (var y in _instances.Values)
+                {
+                    if (!y.NeedsRepaint)
+                    {
                         continue;
                     }
 
@@ -226,7 +241,8 @@ namespace Yaap
                     AppendYaapToBuffer(y, _buffer);
                 }
 
-                if (_buffer.Count > 0) {
+                if (_buffer.Count > 0)
+                {
                     _buffer.Append(ANSICodes.RestoreCursorPosition);
                     SpillBuffer();
                 }
@@ -265,18 +281,23 @@ namespace Yaap
         static void UpdateYaapsOnWindowsNoVt100()
         {
             bool lockWasTaken = false;
-            try {
+            try
+            {
                 _wasCursorHidden = false;
-                while (IsRunning) {
-                    foreach (var y in _instances.Values) {
-                        if (!y.NeedsRepaint) {
+                while (IsRunning)
+                {
+                    foreach (var y in _instances.Values)
+                    {
+                        if (!y.NeedsRepaint)
+                        {
                             continue;
                         }
 
                         if (!lockWasTaken)
                             Monitor.Enter(_consoleLock, ref lockWasTaken);
 
-                        if (y.Settings.DisableCursorDuringUpdates && !_wasCursorHidden) {
+                        if (y.Settings.DisableCursorDuringUpdates && !_wasCursorHidden)
+                        {
                             Console.CursorVisible = false;
                             _wasCursorHidden = true;
                         }
@@ -285,12 +306,14 @@ namespace Yaap
                     }
 
 
-                    if (_wasCursorHidden) {
+                    if (_wasCursorHidden)
+                    {
                         Console.CursorVisible = true;
                         _wasCursorHidden = false;
                     }
 
-                    if (lockWasTaken) {
+                    if (lockWasTaken)
+                    {
                         lockWasTaken = false;
                         Monitor.Exit(_consoleLock);
                     }
@@ -298,7 +321,8 @@ namespace Yaap
                     Thread.Sleep(INTERVAL_MS);
                 }
             }
-            finally {
+            finally
+            {
                 if (lockWasTaken)
                     Monitor.Exit(_consoleLock);
             }
@@ -318,27 +342,32 @@ namespace Yaap
 
         static void RepaintYaap(Yaap yaap)
         {
-            if (_vt100IsSupported) {
+            if (_vt100IsSupported)
+            {
                 RepaintYaapWithVt100(yaap);
             }
-            else {
+            else
+            {
                 RepaintYaapWindowsNoVt100(yaap);
             }
         }
 
         static void ClearYaap(Yaap yaap)
         {
-            if (_vt100IsSupported) {
+            if (_vt100IsSupported)
+            {
                 ClearYaapWithVt100(yaap);
             }
-            else {
+            else
+            {
                 ClearYaapWindowsNoVt100(yaap);
             }
         }
 
         static void ClearYaapWindowsNoVt100(Yaap yaap)
         {
-            lock (_consoleLock) {
+            lock (_consoleLock)
+            {
                 var (x, y) = MoveTo(yaap);
                 yaap.Repaint(_buffer);
                 // Looks silly eh?
@@ -362,7 +391,8 @@ namespace Yaap
 
         internal static void ClearScreen()
         {
-            lock (_consoleLock) {
+            lock (_consoleLock)
+            {
                 Console.Write(ANSICodes.ClearScreen);
             }
         }
@@ -372,7 +402,8 @@ namespace Yaap
         static (int x, int y) MoveTo(Yaap yaap)
         {
             var (x, y) = ConsolePosition;
-            switch (yaap.Settings.Positioning) {
+            switch (yaap.Settings.Positioning)
+            {
                 case YaapPositioning.FlowAndSnapToTop:
                     Console.CursorTop = Math.Max(0, y - (_maxYaapPosition - yaap.Position + _totalLinesAddedAfterYaaps));
                     break;
@@ -391,16 +422,20 @@ namespace Yaap
 
         internal static void Write(string s) { lock (_consoleLock) { Console.Write(s); } }
 
-        internal static void WriteLine(string s) {
-            lock (_consoleLock) {
+        internal static void WriteLine(string s)
+        {
+            lock (_consoleLock)
+            {
                 Console.WriteLine(s);
                 if (_maxYaapPosition > 0)
                     _totalLinesAddedAfterYaaps++;
-            } }
+            }
+        }
 
         internal static void WriteLine()
         {
-            lock (_consoleLock) {
+            lock (_consoleLock)
+            {
                 Console.WriteLine();
                 if (_maxYaapPosition > 0)
                     _totalLinesAddedAfterYaaps++;
@@ -454,10 +489,12 @@ namespace Yaap
                     acceptableUnicodeFonts.FirstOrDefault(s => Win32Console.ConsoleFontName.StartsWith(s, StringComparison.InvariantCulture)) == null;
             }
 
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
                 DoUnspeakableThingsOnWindows();
             }
-            else {
+            else
+            {
                 _unicodeNotWorky = !(Console.OutputEncoding is UTF8Encoding);
             }
         }
@@ -472,11 +509,13 @@ namespace Yaap
         public Yaap(long total, long initialProgress = 0, YaapSettings settings = null)
         {
             int epilogueLen;
-            if (total < 0) {
+            if (total < 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(total), "cannot be negative");
             }
 
-            if (initialProgress < 0) {
+            if (initialProgress < 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(initialProgress), "cannot be negative");
             }
 
@@ -489,18 +528,23 @@ namespace Yaap
             _useMetricAbbreviations = Settings.MetricAbbreviations;
             _smoothingFactor = Settings.SmoothingFactor;
 
-            if (Settings.UseASCII || _unicodeNotWorky) {
+            if (Settings.UseASCII || _unicodeNotWorky)
+            {
                 _selectedBarStyle = _asciiBarStyle;
             }
-            else {
-                _selectedBarStyle = YaapBarStyleDefs.Glyphs[(int) Settings.Style];
+            else
+            {
+                _selectedBarStyle = YaapBarStyleDefs.Glyphs[(int)Settings.Style];
             }
 
-            if (Settings.MetricAbbreviations) {
+            if (Settings.MetricAbbreviations)
+            {
                 var (abbrevTotal, suffix) = GetMetricAbbreviation(total);
                 _progressCountFmt = $"{{0,3}}{{1}}/{abbrevTotal}{suffix}";
                 epilogueLen = "|123K/999K".Length;
-            } else {
+            }
+            else
+            {
                 var totalChars = CountDigits(Total);
                 _progressCountFmt = $"{{0,{totalChars}}}/{total}";
                 epilogueLen = 1 + totalChars * 2 + 1;
@@ -512,7 +556,8 @@ namespace Yaap
             epilogueLen += EPILOGUE_SAMPLE.Length + Settings.UnitName.Length;
 
             var capturedWidth = Console.WindowWidth - 2;
-            if (Settings.Width.HasValue && Settings.Width.Value < capturedWidth) {
+            if (Settings.Width.HasValue && Settings.Width.Value < capturedWidth)
+            {
                 capturedWidth = Settings.Width.Value;
             }
 
@@ -520,8 +565,9 @@ namespace Yaap
 
             _maxGlyphWidth = capturedWidth - prologueCount - epilogueLen;
 
-            _repaintProgressIncrement = (double) Total / (_maxGlyphWidth * _selectedBarStyle.Length);
-            if (Math.Abs(_repaintProgressIncrement) < TOLERANCE) {
+            _repaintProgressIncrement = (double)Total / (_maxGlyphWidth * _selectedBarStyle.Length);
+            if (Math.Abs(_repaintProgressIncrement) < TOLERANCE)
+            {
                 _repaintProgressIncrement = 1;
             }
 
@@ -538,7 +584,8 @@ namespace Yaap
 
             YaapRegistry.AddInstance(this);
 
-            if (Parent != null) {
+            if (Parent != null)
+            {
                 Parent.Child = this;
             }
 
@@ -619,8 +666,10 @@ namespace Yaap
         public YaapState State
         {
             get => _state;
-            set {
-                if (_state == value) {
+            set
+            {
+                if (_state == value)
+                {
                     return;
                 }
 
@@ -635,8 +684,10 @@ namespace Yaap
 
         static (long num, string abbrev) GetMetricAbbreviation(long num)
         {
-            for (var i = 0; i < _metricUnits.Length; i++) {
-                if (num < 1000) {
+            for (var i = 0; i < _metricUnits.Length; i++)
+            {
+                if (num < 1000)
+                {
                     return (num, _metricUnits[i]);
                 }
 
@@ -648,8 +699,10 @@ namespace Yaap
         static (double num, string abbrev) GetMetricAbbreviation(double num)
         {
             // ReSharper disable once ForCanBeConvertedToForeach
-            for (var i = 0; i < _metricUnits.Length; i++) {
-                if (num < 1000) {
+            for (var i = 0; i < _metricUnits.Length; i++)
+            {
+                if (num < 1000)
+                {
                     return (num, _metricUnits[i]);
                 }
 
@@ -662,7 +715,8 @@ namespace Yaap
         static int CountDigits(long number)
         {
             var digits = 0;
-            while (number != 0) {
+            while (number != 0)
+            {
                 number /= 10;
                 digits++;
             }
@@ -679,7 +733,8 @@ namespace Yaap
                 if (swElapsedTicks >= _swTicksIn1Hour || _totalTime.Ticks >= TimeSpan.TicksPerHour)
                     updateSpan = Stopwatch.Frequency * 60;
 
-                if (ForceRepaint) {
+                if (ForceRepaint)
+                {
                     ForceRepaint = false;
                     return true;
                 }
@@ -687,7 +742,8 @@ namespace Yaap
                 if (_lastRepaintTicks + updateSpan < swElapsedTicks)
                     return true;
 
-                if ((Progress + NestedProgress)>= _nextRepaintProgress) {
+                if ((Progress + NestedProgress) >= _nextRepaintProgress)
+                {
                     _nextRepaintProgress += _repaintProgressIncrement;
                     return true;
                 }
@@ -714,12 +770,12 @@ namespace Yaap
         }
 
 
-        bool ShouldShoveDescription     => (Settings.Elements & YaapElement.Description) != 0;
+        bool ShouldShoveDescription => (Settings.Elements & YaapElement.Description) != 0;
         bool ShouldShoveProgressPercent => (Settings.Elements & YaapElement.ProgressPercent) != 0;
-        bool ShouldShoveProgressBar     => (Settings.Elements & YaapElement.ProgressBar) != 0;
-        bool ShouldShoveProgressCount   => (Settings.Elements & YaapElement.ProgressCount) != 0;
-        bool ShouldShoveTime            => (Settings.Elements & YaapElement.Time) != 0;
-        bool ShouldShoveRate            => (Settings.Elements & YaapElement.Rate) != 0;
+        bool ShouldShoveProgressBar => (Settings.Elements & YaapElement.ProgressBar) != 0;
+        bool ShouldShoveProgressCount => (Settings.Elements & YaapElement.ProgressCount) != 0;
+        bool ShouldShoveTime => (Settings.Elements & YaapElement.Time) != 0;
+        bool ShouldShoveRate => (Settings.Elements & YaapElement.Rate) != 0;
 
         internal void Repaint(StringBuffer buffer)
         {
@@ -733,19 +789,23 @@ namespace Yaap
             var cs = Settings.ColorScheme;
 
 
-            if (ShouldShoveDescription) {
+            if (ShouldShoveDescription)
+            {
                 ShoveDescription();
             }
 
-            if (ShouldShoveProgressPercent) {
+            if (ShouldShoveProgressPercent)
+            {
                 ShoveProgressPercentage();
             }
 
-            if (ShouldShoveProgressBar) {
+            if (ShouldShoveProgressBar)
+            {
                 ShoveProgressBar();
             }
 
-            if (ShouldShoveProgressCount) {
+            if (ShouldShoveProgressCount)
+            {
                 ShoveProgressTotals();
             }
 
@@ -753,20 +813,24 @@ namespace Yaap
             //[{{0}}<{{1}}, {{2}}{unitName}/s]
 
             // At least one of Time|Rate is turned on?
-            if ((Settings.Elements & (YaapElement.Rate | YaapElement.Time)) != 0) {
+            if ((Settings.Elements & (YaapElement.Rate | YaapElement.Time)) != 0)
+            {
                 buffer.Append('[');
             }
 
             ShoveTime();
-            if (ShouldShoveTime) {
+            if (ShouldShoveTime)
+            {
                 buffer.Append(", ");
             }
 
-            if (ShouldShoveRate) {
+            if (ShouldShoveRate)
+            {
                 ShoveRate();
             }
 
-            if ((Settings.Elements & (YaapElement.Rate | YaapElement.Time)) != 0) {
+            if ((Settings.Elements & (YaapElement.Rate | YaapElement.Time)) != 0)
+            {
                 buffer.Append(']');
             }
 
@@ -781,18 +845,20 @@ namespace Yaap
                 // we just use the whole thing for the progress calc, otherwise we continuously sample
                 // the last rate update since the previous rate and smooth it out using EMA/SmoothingFactor
                 double rate;
-                if (Math.Abs(_smoothingFactor) < TOLERANCE) {
-                    rate = ((double) progress * Stopwatch.Frequency) / elapsedTicks;
+                if (Math.Abs(_smoothingFactor) < TOLERANCE)
+                {
+                    rate = ((double)progress * Stopwatch.Frequency) / elapsedTicks;
                 }
-                else {
+                else
+                {
                     var dProgress = progress - _lastProgress;
                     var dTicks = elapsedTicks - _lastRepaintTicks;
 
-                    var lastRate = ((double) dProgress * Stopwatch.Frequency) / dTicks;
+                    var lastRate = ((double)dProgress * Stopwatch.Frequency) / dTicks;
                     rate = _lastRepaintTicks == 0 ? lastRate : _smoothingFactor * lastRate + (1 - _smoothingFactor) * _rate;
                 }
 
-                var totalTime = rate <= 0 ? TimeSpan.MaxValue : new TimeSpan((long) (Total * TimeSpan.TicksPerSecond / rate));
+                var totalTime = rate <= 0 ? TimeSpan.MaxValue : new TimeSpan((long)(Total * TimeSpan.TicksPerSecond / rate));
                 // In case rate is so slow, we are overflowing
                 if (totalTime.Ticks < 0)
                     totalTime = TimeSpan.MaxValue;
@@ -802,7 +868,8 @@ namespace Yaap
 
             void ShoveDescription()
             {
-                if (string.IsNullOrWhiteSpace(_description)) {
+                if (string.IsNullOrWhiteSpace(_description))
+                {
                     return;
                 }
                 buffer.Append(_description);
@@ -812,7 +879,7 @@ namespace Yaap
             void ShoveProgressPercentage()
             {
                 ChangeColor(cs.ProgressPercentColor);
-                buffer.AppendFormat("{0,3}%", (int) (((progress + nestedProgress) / Total) * 100));
+                buffer.AppendFormat("{0,3}%", (int)(((progress + nestedProgress) / Total) * 100));
                 ResetColor();
             }
 
@@ -832,9 +899,10 @@ namespace Yaap
 
                 TerminalColor SelectProgressBarColor()
                 {
-                    switch (State) {
+                    switch (State)
+                    {
                         case YaapState.Running: return Settings.ColorScheme.ProgressBarColor;
-                        case YaapState.Paused:  return Settings.ColorScheme.ProgressBarPausedColor;
+                        case YaapState.Paused: return Settings.ColorScheme.ProgressBarPausedColor;
                         case YaapState.Stalled: return Settings.ColorScheme.ProgressBarStalledColor;
 
                     }
@@ -856,7 +924,8 @@ namespace Yaap
                     buffer.Append(_selectedBarStyle[_selectedBarStyle.Length - 1], completeBlocks);
                     var lastCharIdx = (int)(blocks % _selectedBarStyle.Length);
 
-                    if (lastCharIdx == 0) {
+                    if (lastCharIdx == 0)
+                    {
                         return completeBlocks;
                     }
 
@@ -869,11 +938,13 @@ namespace Yaap
             void ShoveProgressTotals()
             {
                 ChangeColor(cs.ProgressCountColor);
-                if (_useMetricAbbreviations) {
+                if (_useMetricAbbreviations)
+                {
                     var (abbrevNum, suffix) = GetMetricAbbreviation(Progress);
                     buffer.AppendFormat(_progressCountFmt, abbrevNum, suffix);
                 }
-                else {
+                else
+                {
                     buffer.AppendFormat(_progressCountFmt, Progress);
                 }
 
@@ -891,19 +962,20 @@ namespace Yaap
             void ShoveRate()
             {
                 ChangeColor(cs.RateColor);
-                if (_useMetricAbbreviations) {
+                if (_useMetricAbbreviations)
+                {
                     var (abbrevNum, suffix) = GetMetricAbbreviation(_rate);
                     if (abbrevNum < 100)
                         buffer.AppendFormat("{0:F2}{1}{2}/s", abbrevNum, suffix, _unitName);
                     else
-                        buffer.AppendFormat("{0}{1}{2}/s", (int) abbrevNum, suffix, _unitName);
+                        buffer.AppendFormat("{0}{1}{2}/s", (int)abbrevNum, suffix, _unitName);
                 }
                 else
                 {
                     if (_rate < 100)
                         buffer.AppendFormat("{0:F2}{1}/s", _rate, _unitName);
                     else
-                        buffer.AppendFormat("{0}{1}/s", (int) _rate, _unitName);
+                        buffer.AppendFormat("{0}{1}/s", (int)_rate, _unitName);
                 }
                 ResetColor();
             }
@@ -934,7 +1006,8 @@ namespace Yaap
             {
                 // Print days formatting
             }
-            else if (ehours + rhours > 0) {
+            else if (ehours + rhours > 0)
+            {
                 if (elapsed == TimeSpan.MaxValue)
                     buffer.Append("--:--?<");
                 else
@@ -944,18 +1017,23 @@ namespace Yaap
                 else
                     buffer.AppendFormat("{0:D2}:{1:D2}m", rhours, rminutes);
             }
-            else {
-                if (elapsed == TimeSpan.MaxValue) {
+            else
+            {
+                if (elapsed == TimeSpan.MaxValue)
+                {
                     buffer.Append("--:--?<");
                 }
-                else {
+                else
+                {
                     buffer.AppendFormat("{0:D2}:{1:D2}s<", eminutes, eseconds);
                 }
 
-                if (remaining == TimeSpan.MaxValue) {
+                if (remaining == TimeSpan.MaxValue)
+                {
                     buffer.Append("--:--?");
                 }
-                else {
+                else
+                {
                     buffer.AppendFormat("{0:D2}:{1:D2}s", rminutes, rseconds);
                 }
             }
@@ -1080,7 +1158,8 @@ namespace Yaap
 
         public static void Deconstruct(this TimeSpan timeSpan, out int days, out int hours, out int minutes, out int seconds, out int ticks)
         {
-            if (timeSpan == TimeSpan.MaxValue) {
+            if (timeSpan == TimeSpan.MaxValue)
+            {
                 days = hours = minutes = seconds = ticks = 0;
                 return;
             }
