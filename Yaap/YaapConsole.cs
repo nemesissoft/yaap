@@ -4,7 +4,7 @@ namespace Yaap
 {
     /// <summary>
     /// A wrapper for <see cref="System.Console"/> Write*() APIs that makes sure the console writing doesn't
-    /// interefere with Yaap operations
+    /// interfere with Yaap operations
     /// </summary>
     public static class YaapConsole
     {

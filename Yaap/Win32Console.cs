@@ -1,52 +1,56 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Yaap
 {
     /// <summary>
-    /// All of the pivoke stuff below is shamelssly stolen from https://github.com/AArnott/pinvoke
+    /// All of the pinvoke stuff below is shamelessly stolen from https://github.com/AArnott/pinvoke
     /// The reason for this IP theft is that the netstandard nuget packages for netstandard DO NOT include
     /// any of the console stuff in to weird decision I don't care to understand
     /// </summary>
+    [SuppressMessage("ReSharper", "UnusedMember.Local")]
     internal class Win32Console
     {
-        private const string Kernel32 = "kernel32.dll";
-        [DllImport(nameof(Kernel32), SetLastError = true)]
+        private const string KERNEL32 = "kernel32.dll";
+        [DllImport(nameof(KERNEL32), SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool GetConsoleMode(IntPtr hConsoleHandle, out ConsoleBufferModes lpMode);
 
-        [DllImport(nameof(Kernel32), SetLastError = true)]
+        [DllImport(nameof(KERNEL32), SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool SetConsoleMode(IntPtr hConsoleHandle, ConsoleBufferModes dwMode);
 
-        [DllImport(nameof(Kernel32), SetLastError = true)]
+        [DllImport(nameof(KERNEL32), SetLastError = true)]
         private static extern IntPtr GetStdHandle(StdHandle nStdHandle);
 
-        [DllImport(nameof(Kernel32), SetLastError = true)]
+        [DllImport(nameof(KERNEL32), SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool SetStdHandle(StdHandle nStdHandle, IntPtr nHandle);
 
-        [DllImport(nameof(Kernel32), SetLastError = true)]
+        [DllImport(nameof(KERNEL32), SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool SetConsoleOutputCP(uint wCodePageID);
+        private static extern bool SetConsoleOutputCP(uint wCodePageId);
 
-        [DllImport(nameof(Kernel32), SetLastError = true)]
+        [DllImport(nameof(KERNEL32), SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool SetConsoleCP(uint wCodePageID);
+        private static extern bool SetConsoleCP(uint wCodePageId);
 
-        [DllImport(nameof(Kernel32), SetLastError = true)]
+        [DllImport(nameof(KERNEL32), SetLastError = true)]
         private static extern uint GetConsoleOutputCP();
 
-        [DllImport(nameof(Kernel32), SetLastError = true)]
+        [DllImport(nameof(KERNEL32), SetLastError = true)]
         private static extern uint GetConsoleCP();
 
-        [DllImport(Kernel32, SetLastError = true)]
-        private static extern bool GetCurrentConsoleFontEx(IntPtr hConsoleOutput, bool bMaximumWindow, [In, Out] CONSOLE_FONT_INFOEX lpConsoleCurrentFont);
+        [DllImport(KERNEL32, SetLastError = true)]
+        private static extern bool GetCurrentConsoleFontEx(IntPtr hConsoleOutput, bool bMaximumWindow, [In, Out] ConsoleFontInfoEx lpConsoleCurrentFont);
 
-        [DllImport(Kernel32, SetLastError = true)]
+        [DllImport(KERNEL32, SetLastError = true)]
         private static extern FileType GetFileType(IntPtr hFile);
 
+        [SuppressMessage("ReSharper", "InconsistentNaming")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         private enum FileType : uint
         {
             FILE_TYPE_CHAR = 0x0002,
@@ -57,9 +61,10 @@ namespace Yaap
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        internal class CONSOLE_FONT_INFOEX
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
+        internal class ConsoleFontInfoEx
         {
-            private readonly int cbSize = Marshal.SizeOf(typeof(CONSOLE_FONT_INFOEX));
+            private readonly int cbSize = Marshal.SizeOf(typeof(ConsoleFontInfoEx));
             internal int FontIndex;
             internal short FontWidth;
             internal short FontHeight;
@@ -74,6 +79,8 @@ namespace Yaap
         /// Designates the console buffer mode on the <see cref="GetConsoleMode(IntPtr, out ConsoleBufferModes)"/> and <see cref="SetConsoleMode(IntPtr, ConsoleBufferModes)"/> functions
         /// </summary>
         [Flags]
+        [SuppressMessage("ReSharper", "InconsistentNaming")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         private enum ConsoleBufferModes
         {
             ENABLE_PROCESSED_INPUT = 0x0001,
@@ -107,6 +114,8 @@ namespace Yaap
         /// Standard handles for the <see cref="GetStdHandle(StdHandle)"/> and <see cref="SetStdHandle"/> methods.
         /// </summary>
         [Flags]
+        [SuppressMessage("ReSharper", "InconsistentNaming")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         private enum StdHandle
         {
             /// <summary>
@@ -125,10 +134,12 @@ namespace Yaap
             STD_ERROR_HANDLE = -12,
         }
 
+        // ReSharper disable InconsistentNaming
         private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
         private static ConsoleBufferModes _originalOutMode, _originalInMode;
         private static uint _originalConsoleOutCP, _originalConsoleCP;
         private static string _consoleFontName;
+        // ReSharper restore InconsistentNaming
 
         internal static string ConsoleFontName
         {
@@ -141,7 +152,7 @@ namespace Yaap
                 if (hOut == INVALID_HANDLE_VALUE)
                     return _consoleFontName = string.Empty;
 
-                var consoleInfo = new CONSOLE_FONT_INFOEX();
+                var consoleInfo = new ConsoleFontInfoEx();
                 GetCurrentConsoleFontEx(hOut, false, consoleInfo);
                 return _consoleFontName = consoleInfo.FaceName;
             }
@@ -152,7 +163,7 @@ namespace Yaap
         /// https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
         /// </summary>
         /// <returns></returns>
-        internal static bool EnableVT100Stuffs()
+        internal static bool EnableVt100Stuffs()
         {
             // Set output mode to handle virtual terminal sequences
             var hOut = GetStdHandle(StdHandle.STD_OUTPUT_HANDLE);

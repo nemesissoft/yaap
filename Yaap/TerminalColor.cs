@@ -9,6 +9,7 @@ namespace Yaap
     /// Feel free to read more about ansi color codes:
     /// https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
     /// </summary>
+    [PublicAPI]
     public enum ANSIColor
     {
         /// <summary>
@@ -122,9 +123,9 @@ namespace Yaap
             => new TerminalColor(fg, bg);
 
         private TerminalColor(ANSIColor fg, ANSIColor bg = ANSIColor.Default)
-            => EscapeCode = GetVT100Representation(fg, bg);
+            => EscapeCode = GetVt100Representation(fg, bg);
 
-        private static string GetVT100Representation(ANSIColor fg, ANSIColor bg = ANSIColor.Default)
+        private static string GetVt100Representation(ANSIColor fg, ANSIColor bg = ANSIColor.Default)
         {
             return $"{CSI}{GetFGColor(fg)};{GetBGColor(bg)}m";
             string GetFGColor(ANSIColor color) => ((int)color).ToString();
@@ -135,7 +136,7 @@ namespace Yaap
         /// Create a <see cref="TerminalColor"/> instance from a <see cref="Color"/>
         /// </summary>
         /// <param name="color">The <see cref="Color"/> to base this color upon</param>
-        /// <param name="bg">a <see cref="Boolean"/> indicating wethear this color will be used as a background color</param>
+        /// <param name="bg">a <see cref="Boolean"/> indicating whether this color will be used as a background color</param>
         /// <returns>The newly created <see cref="TerminalColor"/></returns>
         public static TerminalColor FromColor(Color color, bool bg = false) => new TerminalColor(color, bg);
 

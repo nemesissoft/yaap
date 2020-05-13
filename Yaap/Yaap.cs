@@ -149,7 +149,7 @@ namespace Yaap
             }
         }
 
-        private static bool RedPill() => Win32Console.EnableVT100Stuffs();
+        private static bool RedPill() => Win32Console.EnableVt100Stuffs();
         private static void BluePill() => Win32Console.RestoreTerminalToPristineState();
 
         private static int GetOrSetVerticalPosition(Yaap yaap)
@@ -196,13 +196,13 @@ namespace Yaap
 
             int ClearAndAlignToTop()
             {
-                ANSICodes.SetScrollableRegion(1, Console.WindowHeight);
+                AnsiCodes.SetScrollableRegion(1, Console.WindowHeight);
                 return yaap.Position = 0;
             }
 
             int FixToBottom()
             {
-                ANSICodes.SetScrollableRegion(0, Console.WindowHeight - 1);
+                AnsiCodes.SetScrollableRegion(0, Console.WindowHeight - 1);
                 return yaap.Position = Console.WindowHeight;
             }
         }
@@ -212,12 +212,12 @@ namespace Yaap
             lock (_consoleLock)
             {
                 Console.Write("\r");
-                Console.Write(ANSICodes.EraseEntireLine);
+                Console.Write(AnsiCodes.ERASE_ENTIRE_LINE);
                 if (_wasCursorHidden)
                 {
                     Console.CursorVisible = true;
                 }
-                ANSICodes.SetScrollableRegion(0, Console.BufferHeight + 1);
+                AnsiCodes.SetScrollableRegion(0, Console.BufferHeight + 1);
             }
         }
 
@@ -238,13 +238,13 @@ namespace Yaap
                         continue;
                     }
 
-                    _buffer.Append(ANSICodes.SaveCursorPosition);
+                    _buffer.Append(AnsiCodes.SAVE_CURSOR_POSITION);
                     AppendYaapToBuffer(y, _buffer);
                 }
 
                 if (_buffer.Count > 0)
                 {
-                    _buffer.Append(ANSICodes.RestoreCursorPosition);
+                    _buffer.Append(AnsiCodes.RESTORE_CURSOR_POSITION);
                     SpillBuffer();
                 }
 
@@ -263,18 +263,18 @@ namespace Yaap
         private static void RepaintYaapWithVt100(Yaap yaap)
         {
             _buffer.Clear();
-            _buffer.Append(ANSICodes.SaveCursorPosition);
+            _buffer.Append(AnsiCodes.SAVE_CURSOR_POSITION);
             AppendYaapToBuffer(yaap, _buffer);
-            _buffer.Append(ANSICodes.RestoreCursorPosition);
+            _buffer.Append(AnsiCodes.RESTORE_CURSOR_POSITION);
             SpillBuffer();
         }
 
 
         private static void AppendYaapToBuffer(Yaap yaap, StringBuffer buffer)
         {
-            buffer.AppendFormat(ANSICodes.CSI + "{0}d", yaap.Position + 1);
+            buffer.AppendFormat(AnsiCodes.CSI + "{0}d", yaap.Position + 1);
             buffer.Append('\r');
-            buffer.Append(ANSICodes.EraseToLineEnd);
+            buffer.Append(AnsiCodes.ERASE_TO_LINE_END);
 
             yaap.Repaint(buffer);
         }
@@ -334,7 +334,7 @@ namespace Yaap
             _buffer.Clear();
             var (x, y) = MoveTo(yaap);
             _buffer.Append('\r');
-            _buffer.Append(ANSICodes.EraseToLineEnd);
+            _buffer.Append(AnsiCodes.ERASE_TO_LINE_END);
             yaap.Repaint(_buffer);
             SpillBuffer();
             MoveTo(x, y);
@@ -383,10 +383,10 @@ namespace Yaap
 
         private static void ClearYaapWithVt100(Yaap yaap)
         {
-            _buffer.Append(ANSICodes.SaveCursorPosition);
-            _buffer.AppendFormat(ANSICodes.CSI + "{0}d", yaap.Position + 1);
-            _buffer.Append(ANSICodes.EraseEntireLine);
-            _buffer.Append(ANSICodes.RestoreCursorPosition);
+            _buffer.Append(AnsiCodes.SAVE_CURSOR_POSITION);
+            _buffer.AppendFormat(AnsiCodes.CSI + "{0}d", yaap.Position + 1);
+            _buffer.Append(AnsiCodes.ERASE_ENTIRE_LINE);
+            _buffer.Append(AnsiCodes.RESTORE_CURSOR_POSITION);
             SpillBuffer();
         }
 
@@ -394,7 +394,7 @@ namespace Yaap
         {
             lock (_consoleLock)
             {
-                Console.Write(ANSICodes.ClearScreen);
+                Console.Write(AnsiCodes.CLEAR_SCREEN);
             }
         }
 
@@ -454,7 +454,7 @@ namespace Yaap
     {
         private const double TOLERANCE = 1e-6;
 
-        private static bool _unicodeNotWorky;
+        private static bool _unicodeNotWorking;
         private static readonly char[] _asciiBarStyle = { '#' };
         private readonly char[] _selectedBarStyle;
         private double _nextRepaintProgress;
@@ -485,8 +485,8 @@ namespace Yaap
                     "Iosevka",
                 };
 
-                var vt100IsGo = Win32Console.EnableVT100Stuffs();
-                _unicodeNotWorky = vt100IsGo &&
+                var vt100IsGo = Win32Console.EnableVt100Stuffs();
+                _unicodeNotWorking = vt100IsGo &&
                     acceptableUnicodeFonts.FirstOrDefault(s => Win32Console.ConsoleFontName.StartsWith(s, StringComparison.InvariantCulture)) == null;
             }
 
@@ -496,7 +496,7 @@ namespace Yaap
             }
             else
             {
-                _unicodeNotWorky = !(Console.OutputEncoding is UTF8Encoding);
+                _unicodeNotWorking = !(Console.OutputEncoding is UTF8Encoding);
             }
         }
 
@@ -529,13 +529,13 @@ namespace Yaap
             _useMetricAbbreviations = Settings.MetricAbbreviations;
             _smoothingFactor = Settings.SmoothingFactor;
 
-            if (Settings.UseASCII || _unicodeNotWorky)
+            if (Settings.UseASCII || _unicodeNotWorking)
             {
                 _selectedBarStyle = _asciiBarStyle;
             }
             else
             {
-                _selectedBarStyle = YaapBarStyleDefs.Glyphs[(int)Settings.Style];
+                _selectedBarStyle = YaapBarStyleCache.Glyphs[(int)Settings.Style];
             }
 
             if (Settings.MetricAbbreviations)
@@ -836,14 +836,14 @@ namespace Yaap
                 buffer.Append(']');
             }
 
-            buffer.Append(ANSICodes.EraseToLineEnd);
+            buffer.Append(AnsiCodes.ERASE_TO_LINE_END);
 
             _lastProgress = progress;
             _lastRepaintTicks = elapsedTicks;
 
             (double rate, TimeSpan totalTime) RecalculateRateAndTotalTime()
             {
-                // If we're "told" not to smooth out the rate/total time prediciton,
+                // If we're "told" not to smooth out the rate/total time prediction,
                 // we just use the whole thing for the progress calc, otherwise we continuously sample
                 // the last rate update since the previous rate and smooth it out using EMA/SmoothingFactor
                 double rate;
@@ -913,9 +913,9 @@ namespace Yaap
 
                 int RenderSimpleProgressGlyphs()
                 {
-                    var numGlypchChars = (int)((progress * _maxGlyphWidth) / Total);
-                    buffer.Append(_selectedBarStyle[0], numGlypchChars);
-                    return numGlypchChars;
+                    var numGlyphChars = (int)((progress * _maxGlyphWidth) / Total);
+                    buffer.Append(_selectedBarStyle[0], numGlyphChars);
+                    return numGlyphChars;
                 }
 
                 int RenderComplexProgressGlyphs()
@@ -1001,23 +1001,23 @@ namespace Yaap
         {
             Debug.Assert(elapsed.Ticks >= 0);
             Debug.Assert(remaining.Ticks >= 0);
-            var (edays, ehours, eminutes, eseconds, _) = elapsed;
-            var (rdays, rhours, rminutes, rseconds, _) = remaining;
+            var (eDays, eHours, eMinutes, eSeconds, _) = elapsed;
+            var (rDays, rHours, rMinutes, rSeconds, _) = remaining;
 
-            if (edays + rdays > 0)
+            if (eDays + rDays > 0)
             {
                 // Print days formatting
             }
-            else if (ehours + rhours > 0)
+            else if (eHours + rHours > 0)
             {
                 if (elapsed == TimeSpan.MaxValue)
                     buffer.Append("--:--?<");
                 else
-                    buffer.AppendFormat("{0:D2}:{1:D2}m<", ehours, eminutes);
+                    buffer.AppendFormat("{0:D2}:{1:D2}m<", eHours, eMinutes);
                 if (remaining == TimeSpan.MaxValue)
                     buffer.Append("--:--?");
                 else
-                    buffer.AppendFormat("{0:D2}:{1:D2}m", rhours, rminutes);
+                    buffer.AppendFormat("{0:D2}:{1:D2}m", rHours, rMinutes);
             }
             else
             {
@@ -1027,7 +1027,7 @@ namespace Yaap
                 }
                 else
                 {
-                    buffer.AppendFormat("{0:D2}:{1:D2}s<", eminutes, eseconds);
+                    buffer.AppendFormat("{0:D2}:{1:D2}s<", eMinutes, eSeconds);
                 }
 
                 if (remaining == TimeSpan.MaxValue)
@@ -1036,7 +1036,7 @@ namespace Yaap
                 }
                 else
                 {
-                    buffer.AppendFormat("{0:D2}:{1:D2}s", rminutes, rseconds);
+                    buffer.AppendFormat("{0:D2}:{1:D2}s", rMinutes, rSeconds);
                 }
             }
         }
@@ -1106,7 +1106,7 @@ namespace Yaap
                     var body = Expression.Condition(Expression.TypeIs(param, iilpt), castAndCall,
                         Expression.Constant(-1));
 
-                    return Expression.Lambda<Func<IEnumerable<T>, int>>(body, new[] { param }).Compile();
+                    return Expression.Lambda<Func<IEnumerable<T>, int>>(body, param).Compile();
                 }
             }
         }
@@ -1152,12 +1152,12 @@ namespace Yaap
 
     internal static class DateTimeDeconstruction
     {
-        private const long TicksPerMicroSeconds = 10;
-        private const long TicksPerMillisecond = 10_000;
-        private const long TicksPerSecond = TicksPerMillisecond * 1_000;
-        private const long TicksPerMinute = TicksPerSecond * 60;
-        private const long TicksPerHour = TicksPerMinute * 60;
-        private const long TicksPerDay = TicksPerHour * 24;
+        private const long TICKS_PER_MICRO_SECONDS = 10;
+        private const long TICKS_PER_MILLISECOND = 10_000;
+        private const long TICKS_PER_SECOND = TICKS_PER_MILLISECOND * 1_000;
+        private const long TICKS_PER_MINUTE = TICKS_PER_SECOND * 60;
+        private const long TICKS_PER_HOUR = TICKS_PER_MINUTE * 60;
+        private const long TICKS_PER_DAY = TICKS_PER_HOUR * 24;
 
         public static void Deconstruct(this TimeSpan timeSpan, out int days, out int hours, out int minutes, out int seconds, out int ticks)
         {
@@ -1167,10 +1167,10 @@ namespace Yaap
                 return;
             }
             var t = timeSpan.Ticks;
-            days = (int)(t / (TicksPerHour * 24));
-            hours = (int)((t / TicksPerHour) % 24);
-            minutes = (int)((t / TicksPerMinute) % 60);
-            seconds = (int)((t / TicksPerSecond) % 60);
+            days = (int)(t / (TICKS_PER_HOUR * 24));
+            hours = (int)((t / TICKS_PER_HOUR) % 24);
+            minutes = (int)((t / TICKS_PER_MINUTE) % 60);
+            seconds = (int)((t / TICKS_PER_SECOND) % 60);
             ticks = (int)(t % 10_000_000);
         }
     }

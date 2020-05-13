@@ -55,7 +55,7 @@ namespace Yaap
         /// </summary>
         Rate = 0x20,
         /// <summary>
-        /// A special or'd value representing all elements of Yaap
+        /// All elements of Yaap
         /// </summary>
         All = Description | ProgressPercent | ProgressBar | ProgressCount | Time | Rate,
     }
@@ -96,7 +96,7 @@ namespace Yaap
         public string Description { get; set; }
 
         /// <summary>
-        /// A flags or'd value specifying which visual elements will be presented to the user
+        /// Value indicating which visual elements will be presented to the user
         /// </summary>
         [PublicAPI]
         public YaapElement Elements { get; set; } = YaapElement.All;
@@ -108,7 +108,7 @@ namespace Yaap
         public YaapColorScheme ColorScheme { get; set; } = YaapColorScheme.NoColor;
 
         /// <summary>
-        /// Use only ASCII charchters (notably the '#' charchter as the progress bar 'progress' glyph
+        /// Use only ASCII characters (notably the '#' character as the progress bar 'progress' glyph
         /// </summary>
         [PublicAPI]
         public bool UseASCII { get; set; }
@@ -121,7 +121,7 @@ namespace Yaap
         public YaapBarStyle Style { get; set; }
 
         /// <summary>
-        /// Constrain the prgoress bar to a specific width, when not specified, the progress bar will take up
+        /// Constrain the progress bar to a specific width, when not specified, the progress bar will take up
         /// the width of the terminal. If not set, the progress bar will resize dynamically as the windows changes size
         /// <remarks>Can be set to <see cref="Console.WindowWidth"/> in case the user wishes to constrain the progress bar to the current windows width, or any other width for that matter.</remarks>
         /// </summary>
