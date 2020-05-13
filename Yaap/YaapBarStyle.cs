@@ -2,7 +2,7 @@
 
 namespace Yaap
 {
-    static internal class YaapBarStyleDefs
+    internal static class YaapBarStyleDefs
     {
         // ReSharper disable once HeapView.ObjectAllocation.Evident
         internal static readonly char[][] Glyphs = {

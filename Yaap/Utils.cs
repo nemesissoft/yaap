@@ -3,7 +3,7 @@ using System.Drawing;
 
 namespace Yaap
 {
-    static class ColorDeconstruction
+    internal static class ColorDeconstruction
     {
         public static void Deconstruct(this Color color, out int r, out int g, out int b, out int a)
         {

@@ -87,9 +87,9 @@ namespace Yaap
     /// </summary>
     public class TerminalColor
     {
-        static readonly bool _isTrueColorSupported = Environment.GetEnvironmentVariable("COLORTERM") == "truecolor";
-        const string CSI = "\u001B[";
-        const string FgReset = CSI + "0m";
+        private static readonly bool _isTrueColorSupported = Environment.GetEnvironmentVariable("COLORTERM") == "truecolor";
+        private const string CSI = "\u001B[";
+        private const string FgReset = CSI + "0m";
 
         /// <summary>
         /// The vt100 escape code that should generate this <see cref="TerminalColor"/> on screen
@@ -108,7 +108,8 @@ namespace Yaap
         /// </summary>
         [PublicAPI]
         public static TerminalColor Reset { get; } = new TerminalColor(FgReset);
-        TerminalColor(string color) => EscapeCode = color;
+
+        private TerminalColor(string color) => EscapeCode = color;
 
         /// <summary>
         /// Create a <see cref="TerminalColor"/> instance from a <see cref="ConsoleColor"/>
@@ -120,10 +121,10 @@ namespace Yaap
         public static TerminalColor FromConsoleColor(ANSIColor fg, ANSIColor bg = ANSIColor.Default)
             => new TerminalColor(fg, bg);
 
-        TerminalColor(ANSIColor fg, ANSIColor bg = ANSIColor.Default)
+        private TerminalColor(ANSIColor fg, ANSIColor bg = ANSIColor.Default)
             => EscapeCode = GetVT100Representation(fg, bg);
 
-        static string GetVT100Representation(ANSIColor fg, ANSIColor bg = ANSIColor.Default)
+        private static string GetVT100Representation(ANSIColor fg, ANSIColor bg = ANSIColor.Default)
         {
             return $"{CSI}{GetFGColor(fg)};{GetBGColor(bg)}m";
             string GetFGColor(ANSIColor color) => ((int)color).ToString();
@@ -139,9 +140,9 @@ namespace Yaap
         public static TerminalColor FromColor(Color color, bool bg = false) => new TerminalColor(color, bg);
 
         [PublicAPI]
-        TerminalColor(Color color, bool bg) => EscapeCode = GetVt100Representation(color, bg);
+        private TerminalColor(Color color, bool bg) => EscapeCode = GetVt100Representation(color, bg);
 
-        static string GetVt100Representation(Color color, bool bg)
+        private static string GetVt100Representation(Color color, bool bg)
         {
             if (!_isTrueColorSupported)
                 throw new Exception("terminal truecolor support doesn't seem to be supported by this terminal, if you are sure this is wrong, you can set the $TERMCOLOR environment variable to 'trueolor'");

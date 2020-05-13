@@ -11,43 +11,43 @@ namespace Yaap
     /// </summary>
     internal class Win32Console
     {
-        const string Kernel32 = "kernel32.dll";
+        private const string Kernel32 = "kernel32.dll";
         [DllImport(nameof(Kernel32), SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool GetConsoleMode(IntPtr hConsoleHandle, out ConsoleBufferModes lpMode);
-
-        [DllImport(nameof(Kernel32), SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool SetConsoleMode(IntPtr hConsoleHandle, ConsoleBufferModes dwMode);
-
-        [DllImport(nameof(Kernel32), SetLastError = true)]
-        static extern IntPtr GetStdHandle(StdHandle nStdHandle);
+        private static extern bool GetConsoleMode(IntPtr hConsoleHandle, out ConsoleBufferModes lpMode);
 
         [DllImport(nameof(Kernel32), SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool SetStdHandle(StdHandle nStdHandle, IntPtr nHandle);
+        private static extern bool SetConsoleMode(IntPtr hConsoleHandle, ConsoleBufferModes dwMode);
+
+        [DllImport(nameof(Kernel32), SetLastError = true)]
+        private static extern IntPtr GetStdHandle(StdHandle nStdHandle);
 
         [DllImport(nameof(Kernel32), SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool SetConsoleOutputCP(uint wCodePageID);
+        private static extern bool SetStdHandle(StdHandle nStdHandle, IntPtr nHandle);
 
         [DllImport(nameof(Kernel32), SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool SetConsoleCP(uint wCodePageID);
+        private static extern bool SetConsoleOutputCP(uint wCodePageID);
 
         [DllImport(nameof(Kernel32), SetLastError = true)]
-        static extern uint GetConsoleOutputCP();
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetConsoleCP(uint wCodePageID);
 
         [DllImport(nameof(Kernel32), SetLastError = true)]
-        static extern uint GetConsoleCP();
+        private static extern uint GetConsoleOutputCP();
+
+        [DllImport(nameof(Kernel32), SetLastError = true)]
+        private static extern uint GetConsoleCP();
 
         [DllImport(Kernel32, SetLastError = true)]
-        static extern bool GetCurrentConsoleFontEx(IntPtr hConsoleOutput, bool bMaximumWindow, [In, Out] CONSOLE_FONT_INFOEX lpConsoleCurrentFont);
+        private static extern bool GetCurrentConsoleFontEx(IntPtr hConsoleOutput, bool bMaximumWindow, [In, Out] CONSOLE_FONT_INFOEX lpConsoleCurrentFont);
 
         [DllImport(Kernel32, SetLastError = true)]
-        static extern FileType GetFileType(IntPtr hFile);
+        private static extern FileType GetFileType(IntPtr hFile);
 
-        enum FileType : uint
+        private enum FileType : uint
         {
             FILE_TYPE_CHAR = 0x0002,
             FILE_TYPE_DISK = 0x0001,
@@ -59,7 +59,7 @@ namespace Yaap
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         internal class CONSOLE_FONT_INFOEX
         {
-            readonly int cbSize = Marshal.SizeOf(typeof(CONSOLE_FONT_INFOEX));
+            private readonly int cbSize = Marshal.SizeOf(typeof(CONSOLE_FONT_INFOEX));
             internal int FontIndex;
             internal short FontWidth;
             internal short FontHeight;
@@ -74,7 +74,7 @@ namespace Yaap
         /// Designates the console buffer mode on the <see cref="GetConsoleMode(IntPtr, out ConsoleBufferModes)"/> and <see cref="SetConsoleMode(IntPtr, ConsoleBufferModes)"/> functions
         /// </summary>
         [Flags]
-        enum ConsoleBufferModes
+        private enum ConsoleBufferModes
         {
             ENABLE_PROCESSED_INPUT = 0x0001,
 
@@ -107,7 +107,7 @@ namespace Yaap
         /// Standard handles for the <see cref="GetStdHandle(StdHandle)"/> and <see cref="SetStdHandle"/> methods.
         /// </summary>
         [Flags]
-        enum StdHandle
+        private enum StdHandle
         {
             /// <summary>
             /// The standard input device. Initially, this is the console input buffer, CONIN$.
@@ -125,10 +125,10 @@ namespace Yaap
             STD_ERROR_HANDLE = -12,
         }
 
-        static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
-        static ConsoleBufferModes _originalOutMode, _originalInMode;
-        static uint _originalConsoleOutCP, _originalConsoleCP;
-        static string _consoleFontName;
+        private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
+        private static ConsoleBufferModes _originalOutMode, _originalInMode;
+        private static uint _originalConsoleOutCP, _originalConsoleCP;
+        private static string _consoleFontName;
 
         internal static string ConsoleFontName
         {

@@ -13,22 +13,22 @@ using JetBrains.Annotations;
 
 namespace Yaap
 {
-    static class YaapRegistry
+    internal static class YaapRegistry
     {
-        static Thread _monitorThread;
-        static char[] _chars = new char[Console.WindowWidth * 10];
-        static readonly object _consoleLock = new object();
-        static readonly object _threadLock = new object();
-        static readonly IDictionary<int, Yaap> _instances = new ConcurrentDictionary<int, Yaap>();
-        static int _maxYaapPosition;
-        static int _totalLinesAddedAfterYaaps;
-        static int _isRunning;
-        static bool _wasCursorHidden;
+        private static Thread _monitorThread;
+        private static char[] _chars = new char[Console.WindowWidth * 10];
+        private static readonly object _consoleLock = new object();
+        private static readonly object _threadLock = new object();
+        private static readonly IDictionary<int, Yaap> _instances = new ConcurrentDictionary<int, Yaap>();
+        private static int _maxYaapPosition;
+        private static int _totalLinesAddedAfterYaaps;
+        private static int _isRunning;
+        private static bool _wasCursorHidden;
         internal static ThreadLocal<Stack<Yaap>> YaapStack =
             new ThreadLocal<Stack<Yaap>>(() => new Stack<Yaap>());
 
-        static readonly bool _vt100IsSupported;
-        static readonly bool _isConsoleRedirected;
+        private static readonly bool _vt100IsSupported;
+        private static readonly bool _isConsoleRedirected;
 
         static YaapRegistry()
         {
@@ -55,7 +55,7 @@ namespace Yaap
             };
         }
 
-        static bool DetectConsoleRedirection()
+        private static bool DetectConsoleRedirection()
         {
             switch (Environment.OSVersion.Platform)
             {
@@ -70,10 +70,10 @@ namespace Yaap
             }
         }
 
-        static bool DetectConsoleRedirectionOnPosix() =>
+        private static bool DetectConsoleRedirectionOnPosix() =>
             !Mono.Unix.Native.Syscall.isatty(1);
 
-        static bool IsRunning
+        private static bool IsRunning
         {
             get => _isRunning == 1;
             set => Interlocked.Exchange(ref _isRunning, value ? 1 : 0);
@@ -149,10 +149,10 @@ namespace Yaap
             }
         }
 
-        static bool RedPill() => Win32Console.EnableVT100Stuffs();
-        static void BluePill() => Win32Console.RestoreTerminalToPristineState();
+        private static bool RedPill() => Win32Console.EnableVT100Stuffs();
+        private static void BluePill() => Win32Console.RestoreTerminalToPristineState();
 
-        static int GetOrSetVerticalPosition(Yaap yaap)
+        private static int GetOrSetVerticalPosition(Yaap yaap)
         {
             switch (yaap.Settings.Positioning)
             {
@@ -207,7 +207,7 @@ namespace Yaap
             }
         }
 
-        static void OnCancelKeyPress(object sender, ConsoleCancelEventArgs e)
+        private static void OnCancelKeyPress(object sender, ConsoleCancelEventArgs e)
         {
             lock (_consoleLock)
             {
@@ -221,10 +221,11 @@ namespace Yaap
             }
         }
 
-        static readonly StringBuffer _buffer = new StringBuffer(Console.WindowWidth * 10);
+        private static readonly StringBuffer _buffer = new StringBuffer(Console.WindowWidth * 10);
 
-        const int INTERVAL_MS = 50;
-        static void UpdateYaapsOnVt100()
+        private const int INTERVAL_MS = 50;
+
+        private static void UpdateYaapsOnVt100()
         {
 
             while (IsRunning)
@@ -251,7 +252,7 @@ namespace Yaap
             }
         }
 
-        static void SpillBuffer()
+        private static void SpillBuffer()
         {
             if (_buffer.Count > _chars.Length)
                 Array.Resize(ref _chars, _buffer.Count);
@@ -259,7 +260,7 @@ namespace Yaap
             Console.Write(_chars, 0, _buffer.Count);
         }
 
-        static void RepaintYaapWithVt100(Yaap yaap)
+        private static void RepaintYaapWithVt100(Yaap yaap)
         {
             _buffer.Clear();
             _buffer.Append(ANSICodes.SaveCursorPosition);
@@ -269,7 +270,7 @@ namespace Yaap
         }
 
 
-        static void AppendYaapToBuffer(Yaap yaap, StringBuffer buffer)
+        private static void AppendYaapToBuffer(Yaap yaap, StringBuffer buffer)
         {
             buffer.AppendFormat(ANSICodes.CSI + "{0}d", yaap.Position + 1);
             buffer.Append('\r');
@@ -278,7 +279,7 @@ namespace Yaap
             yaap.Repaint(buffer);
         }
 
-        static void UpdateYaapsOnWindowsNoVt100()
+        private static void UpdateYaapsOnWindowsNoVt100()
         {
             bool lockWasTaken = false;
             try
@@ -328,7 +329,7 @@ namespace Yaap
             }
         }
 
-        static void RepaintYaapWindowsNoVt100(Yaap yaap)
+        private static void RepaintYaapWindowsNoVt100(Yaap yaap)
         {
             _buffer.Clear();
             var (x, y) = MoveTo(yaap);
@@ -340,7 +341,7 @@ namespace Yaap
         }
 
 
-        static void RepaintYaap(Yaap yaap)
+        private static void RepaintYaap(Yaap yaap)
         {
             if (_vt100IsSupported)
             {
@@ -352,7 +353,7 @@ namespace Yaap
             }
         }
 
-        static void ClearYaap(Yaap yaap)
+        private static void ClearYaap(Yaap yaap)
         {
             if (_vt100IsSupported)
             {
@@ -364,7 +365,7 @@ namespace Yaap
             }
         }
 
-        static void ClearYaapWindowsNoVt100(Yaap yaap)
+        private static void ClearYaapWindowsNoVt100(Yaap yaap)
         {
             lock (_consoleLock)
             {
@@ -380,7 +381,7 @@ namespace Yaap
             }
         }
 
-        static void ClearYaapWithVt100(Yaap yaap)
+        private static void ClearYaapWithVt100(Yaap yaap)
         {
             _buffer.Append(ANSICodes.SaveCursorPosition);
             _buffer.AppendFormat(ANSICodes.CSI + "{0}d", yaap.Position + 1);
@@ -397,9 +398,9 @@ namespace Yaap
             }
         }
 
-        static void MoveTo(int x, int y) => Console.SetCursorPosition(x, y);
+        private static void MoveTo(int x, int y) => Console.SetCursorPosition(x, y);
 
-        static (int x, int y) MoveTo(Yaap yaap)
+        private static (int x, int y) MoveTo(Yaap yaap)
         {
             var (x, y) = ConsolePosition;
             switch (yaap.Settings.Positioning)
@@ -418,7 +419,7 @@ namespace Yaap
 
         }
 
-        static (int x, int y) ConsolePosition => (Console.CursorLeft, Console.CursorTop);
+        private static (int x, int y) ConsolePosition => (Console.CursorLeft, Console.CursorTop);
 
         internal static void Write(string s) { lock (_consoleLock) { Console.Write(s); } }
 
@@ -451,25 +452,25 @@ namespace Yaap
     /// </summary>
     public class Yaap : IDisposable
     {
-        const double TOLERANCE = 1e-6;
+        private const double TOLERANCE = 1e-6;
 
-        static bool _unicodeNotWorky;
-        static readonly char[] _asciiBarStyle = { '#' };
-        readonly char[] _selectedBarStyle;
-        double _nextRepaintProgress;
-        readonly string _progressCountFmt;
-        readonly int _maxGlyphWidth;
-        readonly double _repaintProgressIncrement;
+        private static bool _unicodeNotWorky;
+        private static readonly char[] _asciiBarStyle = { '#' };
+        private readonly char[] _selectedBarStyle;
+        private double _nextRepaintProgress;
+        private readonly string _progressCountFmt;
+        private readonly int _maxGlyphWidth;
+        private readonly double _repaintProgressIncrement;
         internal readonly Stopwatch _sw;
-        TimeSpan _totalTime;
-        static readonly long _swTicksIn1Hour = Stopwatch.Frequency * 3600;
-        long _lastRepaintTicks;
-        double _rate;
-        long _lastProgress;
-        readonly string _unitName;
-        readonly string _description;
-        readonly bool _useMetricAbbreviations;
-        readonly double _smoothingFactor;
+        private TimeSpan _totalTime;
+        private static readonly long _swTicksIn1Hour = Stopwatch.Frequency * 3600;
+        private long _lastRepaintTicks;
+        private double _rate;
+        private long _lastProgress;
+        private readonly string _unitName;
+        private readonly string _description;
+        private readonly bool _useMetricAbbreviations;
+        private readonly double _smoothingFactor;
 
         static Yaap()
         {
@@ -593,9 +594,9 @@ namespace Yaap
         }
 
 
-        Yaap Parent { get; }
+        private Yaap Parent { get; }
 
-        Yaap Child { get; set; }
+        private Yaap Child { get; set; }
 
         /// <summary>
         /// The current progress value of the progress bar
@@ -604,7 +605,7 @@ namespace Yaap
         [PublicAPI]
         public long Progress { get; set; }
 
-        double NestedProgress =>
+        private double NestedProgress =>
             Child == null ?
                 0 :
                 (Child.Progress + Child.NestedProgress) / Child.Total;
@@ -650,8 +651,9 @@ namespace Yaap
         public TimeSpan TotalTime { get; private set; }
 
 
-        int _forceRepaint;
-        bool ForceRepaint
+        private int _forceRepaint;
+
+        private bool ForceRepaint
         {
             get => _forceRepaint == 1;
             set => Interlocked.Exchange(ref _forceRepaint, value ? 1 : 0);
@@ -678,11 +680,11 @@ namespace Yaap
             }
         }
 
-        static readonly string[] _metricUnits = { "", "k", "M", "G", "T", "P", "E", "Z" };
-        TerminalColor _lastColor;
-        YaapState _state;
+        private static readonly string[] _metricUnits = { "", "k", "M", "G", "T", "P", "E", "Z" };
+        private TerminalColor _lastColor;
+        private YaapState _state;
 
-        static (long num, string abbrev) GetMetricAbbreviation(long num)
+        private static (long num, string abbrev) GetMetricAbbreviation(long num)
         {
             for (var i = 0; i < _metricUnits.Length; i++)
             {
@@ -696,7 +698,7 @@ namespace Yaap
             throw new ArgumentOutOfRangeException(nameof(num), "is too large");
         }
 
-        static (double num, string abbrev) GetMetricAbbreviation(double num)
+        private static (double num, string abbrev) GetMetricAbbreviation(double num)
         {
             // ReSharper disable once ForCanBeConvertedToForeach
             for (var i = 0; i < _metricUnits.Length; i++)
@@ -712,7 +714,7 @@ namespace Yaap
             throw new ArgumentOutOfRangeException(nameof(num), "is too large");
         }
 
-        static int CountDigits(long number)
+        private static int CountDigits(long number)
         {
             var digits = 0;
             while (number != 0)
@@ -752,7 +754,7 @@ namespace Yaap
             }
         }
 
-        int _isDisposed;
+        private int _isDisposed;
 
         internal bool IsDisposed
         {
@@ -770,12 +772,12 @@ namespace Yaap
         }
 
 
-        bool ShouldShoveDescription => (Settings.Elements & YaapElement.Description) != 0;
-        bool ShouldShoveProgressPercent => (Settings.Elements & YaapElement.ProgressPercent) != 0;
-        bool ShouldShoveProgressBar => (Settings.Elements & YaapElement.ProgressBar) != 0;
-        bool ShouldShoveProgressCount => (Settings.Elements & YaapElement.ProgressCount) != 0;
-        bool ShouldShoveTime => (Settings.Elements & YaapElement.Time) != 0;
-        bool ShouldShoveRate => (Settings.Elements & YaapElement.Rate) != 0;
+        private bool ShouldShoveDescription => (Settings.Elements & YaapElement.Description) != 0;
+        private bool ShouldShoveProgressPercent => (Settings.Elements & YaapElement.ProgressPercent) != 0;
+        private bool ShouldShoveProgressBar => (Settings.Elements & YaapElement.ProgressBar) != 0;
+        private bool ShouldShoveProgressCount => (Settings.Elements & YaapElement.ProgressCount) != 0;
+        private bool ShouldShoveTime => (Settings.Elements & YaapElement.Time) != 0;
+        private bool ShouldShoveRate => (Settings.Elements & YaapElement.Rate) != 0;
 
         internal void Repaint(StringBuffer buffer)
         {
@@ -995,7 +997,7 @@ namespace Yaap
         }
 
 
-        static void WriteTimes(StringBuffer buffer, TimeSpan elapsed, TimeSpan remaining)
+        private static void WriteTimes(StringBuffer buffer, TimeSpan elapsed, TimeSpan remaining)
         {
             Debug.Assert(elapsed.Ticks >= 0);
             Debug.Assert(remaining.Ticks >= 0);
@@ -1047,8 +1049,8 @@ namespace Yaap
     /// <typeparam name="T">The type of objects to enumerate</typeparam>
     public class YaapEnumerable<T> : Yaap, IEnumerable<T>
     {
-        readonly IEnumerable<T> _enumerable;
-        static Func<IEnumerable<T>, int> _cheapCount;
+        private readonly IEnumerable<T> _enumerable;
+        private static Func<IEnumerable<T>, int> _cheapCount;
 
         internal YaapEnumerable(IEnumerable<T> e, long total = -1, long initialProgress = 0, YaapSettings settings = null) :
             base(total != -1 ? total : GetCheapCount(e), initialProgress, settings)
@@ -1080,7 +1082,8 @@ namespace Yaap
         }
 
         #region Avert Your Eyes!
-        static Func<IEnumerable<T>, int> CheapCountDelegate
+
+        private static Func<IEnumerable<T>, int> CheapCountDelegate
         {
             get
             {
@@ -1147,14 +1150,14 @@ namespace Yaap
         new YaapEnumerable<T>(e, total, initialProgress, settings);
     }
 
-    static class DateTimeDeconstruction
+    internal static class DateTimeDeconstruction
     {
-        const long TicksPerMicroSeconds = 10;
-        const long TicksPerMillisecond = 10_000;
-        const long TicksPerSecond = TicksPerMillisecond * 1_000;
-        const long TicksPerMinute = TicksPerSecond * 60;
-        const long TicksPerHour = TicksPerMinute * 60;
-        const long TicksPerDay = TicksPerHour * 24;
+        private const long TicksPerMicroSeconds = 10;
+        private const long TicksPerMillisecond = 10_000;
+        private const long TicksPerSecond = TicksPerMillisecond * 1_000;
+        private const long TicksPerMinute = TicksPerSecond * 60;
+        private const long TicksPerHour = TicksPerMinute * 60;
+        private const long TicksPerDay = TicksPerHour * 24;
 
         public static void Deconstruct(this TimeSpan timeSpan, out int days, out int hours, out int minutes, out int seconds, out int ticks)
         {
