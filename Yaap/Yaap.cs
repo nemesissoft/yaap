@@ -57,7 +57,8 @@ namespace Yaap
         }
 
         private static bool DetectConsoleRedirection() =>
-            Environment.OSVersion.Platform switch {
+            Environment.OSVersion.Platform switch
+            {
                 PlatformID.Win32NT => Win32Console.DetectConsoleRedirectionOnWindows(),
                 PlatformID.MacOSX => DetectConsoleRedirectionOnPosix(),
                 PlatformID.Unix => DetectConsoleRedirectionOnPosix(),
@@ -148,7 +149,8 @@ namespace Yaap
 
         private static int GetOrSetVerticalPosition(Yaap yaap)
         {
-            return yaap.Settings.Positioning switch {
+            return yaap.Settings.Positioning switch
+            {
                 YaapPositioning.FlowAndSnapToTop => FlowAndSnapToTop(),
                 YaapPositioning.ClearAndAlignToTop => ClearAndAlignToTop(),
                 YaapPositioning.FixToBottom => FixToBottom(),
@@ -458,7 +460,7 @@ namespace Yaap
         private static readonly long _swTicksIn1Hour = Stopwatch.Frequency * 3600;
         private long _lastRepaintTicks;
         private double _rate;
-        private long _lastProgress;
+        private ulong _lastProgress;
         private readonly string _unitName;
         private readonly string _description;
         private readonly bool _useMetricAbbreviations;
@@ -500,19 +502,8 @@ namespace Yaap
         /// <param name="initialProgress">The (optional) initial progress value</param>
         /// <param name="settings">The (optional) visual settings overrides</param>
         [PublicAPI]
-        public Yaap(long total, long initialProgress = 0, YaapSettings settings = null)
+        public Yaap(ulong total, ulong initialProgress = 0, YaapSettings settings = null)
         {
-            int epilogueLen;
-            if (total < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(total), "cannot be negative");
-            }
-
-            if (initialProgress < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(initialProgress), "cannot be negative");
-            }
-
             Settings = settings ?? new YaapSettings();
             Total = total;
             Progress = initialProgress;
@@ -522,15 +513,11 @@ namespace Yaap
             _useMetricAbbreviations = Settings.MetricAbbreviations;
             _smoothingFactor = Settings.SmoothingFactor;
 
-            if (Settings.UseASCII || _unicodeNotWorking)
-            {
-                _selectedBarStyle = _asciiBarStyle;
-            }
-            else
-            {
-                _selectedBarStyle = YaapBarStyleCache.Glyphs[(int)Settings.Style];
-            }
+            _selectedBarStyle = Settings.UseASCII || _unicodeNotWorking
+                ? _asciiBarStyle
+                : YaapBarStyleCache.Glyphs[(int)Settings.Style];
 
+            int epilogueLen;
             if (Settings.MetricAbbreviations)
             {
                 var (abbrevTotal, suffix) = GetMetricAbbreviation(total);
@@ -584,6 +571,17 @@ namespace Yaap
             }
 
             YaapRegistry.YaapStack.Value.Push(this);
+
+            static int CountDigits(ulong number)
+            {
+                var digits = 0;
+                while (number != 0)
+                {
+                    number /= 10;
+                    digits++;
+                }
+                return digits;
+            }
         }
 
 
@@ -596,7 +594,7 @@ namespace Yaap
         /// <remarks>Always between 0 .. <see cref="Total"/></remarks>
         /// </summary>
         [PublicAPI]
-        public long Progress { get; set; }
+        public ulong Progress { get; set; }
 
         private double NestedProgress =>
             Child == null ?
@@ -608,7 +606,7 @@ namespace Yaap
         /// <remarks>When the value is not supplied, only basic statistics will be displayed</remarks>
         /// </summary>
         [PublicAPI]
-        public long Total { get; }
+        public ulong Total { get; }
 
         /// <summary>
         /// Whether to disable the entire progressbar display
@@ -677,7 +675,7 @@ namespace Yaap
         private TerminalColor _lastColor;
         private YaapState _state;
 
-        private static (long num, string abbrev) GetMetricAbbreviation(long num)
+        private static (ulong num, string abbrev) GetMetricAbbreviation(ulong num)
         {
             for (var i = 0; i < _metricUnits.Length; i++)
             {
@@ -690,29 +688,13 @@ namespace Yaap
 
         private static (double num, string abbrev) GetMetricAbbreviation(double num)
         {
-            // ReSharper disable once ForCanBeConvertedToForeach
             for (var i = 0; i < _metricUnits.Length; i++)
             {
                 if (num < 1000)
-                {
                     return (num, _metricUnits[i]);
-                }
-
                 num /= 1000;
             }
-
             throw new ArgumentOutOfRangeException(nameof(num), "is too large");
-        }
-
-        private static int CountDigits(long number)
-        {
-            var digits = 0;
-            while (number != 0)
-            {
-                number /= 10;
-                digits++;
-            }
-            return digits;
         }
 
         internal bool NeedsRepaint
@@ -890,7 +872,8 @@ namespace Yaap
                 buffer.Append('|');
 
                 TerminalColor SelectProgressBarColor() =>
-                    State switch {
+                    State switch
+                    {
                         YaapState.Running => Settings.ColorScheme.ProgressBarColor,
                         YaapState.Paused => Settings.ColorScheme.ProgressBarPausedColor,
                         YaapState.Stalled => Settings.ColorScheme.ProgressBarStalledColor,
@@ -899,7 +882,7 @@ namespace Yaap
 
                 int RenderSimpleProgressGlyphs()
                 {
-                    var numGlyphChars = (int)(progress * _maxGlyphWidth / Total);
+                    var numGlyphChars = (int)(progress * (ulong)_maxGlyphWidth / Total);
                     buffer.Append(_selectedBarStyle[0], numGlyphChars);
                     return numGlyphChars;
                 }
@@ -1039,8 +1022,8 @@ namespace Yaap
         private static Func<IEnumerable<T>, int> _cheapCount;
 
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-        internal YaapEnumerable(IEnumerable<T> e, long total = -1, long initialProgress = 0, YaapSettings settings = null) :
-            base(total != -1 ? total : GetCheapCount(e), initialProgress, settings) =>
+        internal YaapEnumerable(IEnumerable<T> e, ulong? total = null, ulong initialProgress = 0, YaapSettings settings = null) :
+            base(total ?? (ulong)GetCheapCount(e), initialProgress, settings) =>
             _enumerable = e;
 
         /// <summary>
@@ -1055,7 +1038,8 @@ namespace Yaap
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
-            return source switch {
+            return source switch
+            {
                 ICollection<T> collectionOfT => collectionOfT.Count,
                 ICollection collection => collection.Count,
                 _ => CheapCountDelegate(source)
@@ -1128,8 +1112,9 @@ namespace Yaap
         /// <param name="initialProgress">The (optional) initial progress value</param>
         /// <param name="settings">The (optional) visual settings overrides</param>
         /// <returns>The newly instantiated <see cref="YaapEnumerable{T}"/> wrapping the provided <see cref="IEnumerable{T}"/></returns>
-        public static YaapEnumerable<T> Yaap<T>(this IEnumerable<T> e, long total = -1, long initialProgress = 0, YaapSettings settings = null) =>
-        new YaapEnumerable<T>(e, total, initialProgress, settings);
+        public static YaapEnumerable<T> Yaap<T>(this IEnumerable<T> e, ulong? total = null, ulong initialProgress = 0,
+            YaapSettings settings = null) =>
+            new YaapEnumerable<T>(e, total, initialProgress, settings);
     }
 
     internal static class DateTimeDeconstruction
