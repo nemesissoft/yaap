@@ -335,13 +335,9 @@ namespace Yaap
         private static void RepaintYaap(Yaap yaap)
         {
             if (_vt100IsSupported)
-            {
                 RepaintYaapWithVt100(yaap);
-            }
             else
-            {
                 RepaintYaapWindowsNoVt100(yaap);
-            }
         }
 
         private static void ClearYaap(Yaap yaap)
@@ -393,7 +389,7 @@ namespace Yaap
 
         private static (int x, int y) MoveTo(Yaap yaap)
         {
-            var (x, y) = ConsolePosition;
+            (int x, int y) = ConsolePosition;
             switch (yaap.Settings.Positioning)
             {
                 case YaapPositioning.FlowAndSnapToTop:
