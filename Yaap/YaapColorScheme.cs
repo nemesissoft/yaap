@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Yaap
+﻿namespace Yaap
 {
     /// <summary>
     /// A class representing the various colors that can be applied to Yaap
